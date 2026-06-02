@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Wi-Fi 测速 - 手机端">
+    <title>Wi-Fi 测速 - 手机端</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/mobile.css">
+    <style>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="mobile-header">
+            <div class="header-top">
+                <div class="logo">
+                    <span class="logo-icon">📡</span>
+                    <span class="logo-text">Wi-Fi 测速</span>
+                </div>
+                <button id="themeToggle" class="theme-btn">🌙</button>
+            </div>
+            <nav class="mobile-nav">
+                <button class="nav-btn active" data-tab="test">🚀 测速</button>
+                <button class="nav-btn" data-tab="latency">🎯 延迟</button>
+                <button class="nav-btn" data-tab="history">📜 记录</button>
+            </nav>
+        </header>
+
+        <main class="mobile-main">
+            <a href="index.html" class="back-link">← 返回选择版本</a>
+
+            <section id="tab-test" class="tab-content active">
+                <div class="gauges-container">
+                    <div class="gauge-wrapper">
+                        <div class="speed-gauge download-gauge">
+                            <div class="gauge-ring"></div>
+                            <div class="gauge-inner">
+                                <div class="gauge-value" id="downloadGaugeValue">0.00</div>
+                                <div class="gauge-label">MB/s</div>
+                                <div class="gauge-unit">下载速度</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gauge-wrapper">
+                        <div class="speed-gauge upload-gauge">
+                            <div class="gauge-ring"></div>
+                            <div class="gauge-inner">
+                                <div class="gauge-value" id="uploadGaugeValue">0.00</div>
+                                <div class="gauge-label">MB/s</div>
+                                <div class="gauge-unit">上传速度</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-area">
+                    <button id="startTest" class="btn-primary">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">开始测速</span>
+                    </button>
+                    <button id="abortTest" class="btn-secondary hidden">
+                        <span class="btn-icon">⏹</span>
+                        <span class="btn-text">停止</span>
+                    </button>
+                </div>
+
+                <p id="statusMessage" class="status-text">点击开始测速</p>
+
+                <div class="mobile-node-selector">
+                    <div class="node-selector-header">
+                        <span>📍 当前节点</span>
+                        <button id="refreshLocation" class="btn-refresh">🔄</button>
+                    </div>
+                    <select id="nodeSelect" class="mobile-node-select">
+                        <option value="auto">自动选择（推荐）</option>
+                    </select>
+                    <div id="currentNode" class="current-node-display"></div>
+                </div>
+
+                <div class="metrics-list">
+                    <div class="metric-item" data-metric="download">
+                        <div class="metric-info">
+                            <span class="metric-icon">⬇️</span>
+                            <span class="metric-label">下载</span>
+                        </div>
+                        <div class="metric-data">
+                            <span class="metric-value" id="downloadValue">0.00</span>
+                            <span class="metric-unit">MB/s</span>
+                        </div>
+                        <span class="metric-rating" id="downloadRating">--</span>
+                    </div>
+
+                    <div class="metric-item" data-metric="upload">
+                        <div class="metric-info">
+                            <span class="metric-icon">⬆️</span>
+                            <span class="metric-label">上传</span>
+                        </div>
+                        <div class="metric-data">
+                            <span class="metric-value" id="uploadValue">0.00</span>
+                            <span class="metric-unit">MB/s</span>
+                        </div>
+                        <span class="metric-rating" id="uploadRating">--</span>
+                    </div>
+
+                    <div class="metric-item" data-metric="ping">
+                        <div class="metric-info">
+                            <span class="metric-icon">⏱️</span>
+                            <span class="metric-label">延迟</span>
+                        </div>
+                        <div class="metric-data">
+                            <span class="metric-value" id="pingValue">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                        <span class="metric-rating" id="pingRating">--</span>
+                    </div>
+
+                    <div class="metric-item" data-metric="jitter">
+                        <div class="metric-info">
+                            <span class="metric-icon">📈</span>
+                            <span class="metric-label">抖动</span>
+                        </div>
+                        <div class="metric-data">
+                            <span class="metric-value" id="jitterValue">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                        <span class="metric-rating" id="jitterRating">--</span>
+                    </div>
+                </div>
+
+                <div id="networkInfo" class="network-info"></div>
+            </section>
+
+            <section id="tab-latency" class="tab-content">
+                <p id="latencyStatus" class="section-desc">选择应用测试延迟</p>
+
+                <div class="category-selector">
+                    <button class="category-btn active" data-category="games">🎮 游戏</button>
+                    <button class="category-btn" data-category="video">📺 视频</button>
+                    <button class="category-btn" data-category="social">💬 社交</button>
+                    <button class="category-btn" data-category="ecommerce">🛒 电商</button>
+                    <button class="category-btn" data-category="cloud">☁️ 云</button>
+                </div>
+
+                <div id="category-games" class="apps-section active">
+                    <button class="test-all-btn" data-category="games">测试全部</button>
+                    <div class="apps-list">
+                        <div class="app-item" data-app="英雄联盟" data-category="games">
+                            <div class="app-icon">🎮</div>
+                            <div class="app-info">
+                                <div class="app-name">英雄联盟</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="王者荣耀" data-category="games">
+                            <div class="app-icon">👑</div>
+                            <div class="app-info">
+                                <div class="app-name">王者荣耀</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="原神" data-category="games">
+                            <div class="app-icon">⚔️</div>
+                            <div class="app-info">
+                                <div class="app-name">原神</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="和平精英" data-category="games">
+                            <div class="app-icon">🎯</div>
+                            <div class="app-info">
+                                <div class="app-name">和平精英</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="category-video" class="apps-section">
+                    <button class="test-all-btn" data-category="video">测试全部</button>
+                    <div class="apps-list">
+                        <div class="app-item" data-app="YouTube" data-category="video">
+                            <div class="app-icon">▶️</div>
+                            <div class="app-info">
+                                <div class="app-name">YouTube</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="Netflix" data-category="video">
+                            <div class="app-icon">📺</div>
+                            <div class="app-info">
+                                <div class="app-name">Netflix</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="B站" data-category="video">
+                            <div class="app-icon">🎬</div>
+                            <div class="app-info">
+                                <div class="app-name">B站</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="抖音" data-category="video">
+                            <div class="app-icon">🎵</div>
+                            <div class="app-info">
+                                <div class="app-name">抖音</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="category-social" class="apps-section">
+                    <button class="test-all-btn" data-category="social">测试全部</button>
+                    <div class="apps-list">
+                        <div class="app-item" data-app="微信" data-category="social">
+                            <div class="app-icon">💬</div>
+                            <div class="app-info">
+                                <div class="app-name">微信</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="QQ" data-category="social">
+                            <div class="app-icon">📧</div>
+                            <div class="app-info">
+                                <div class="app-name">QQ</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="Telegram" data-category="social">
+                            <div class="app-icon">✈️</div>
+                            <div class="app-info">
+                                <div class="app-name">Telegram</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="category-ecommerce" class="apps-section">
+                    <button class="test-all-btn" data-category="ecommerce">测试全部</button>
+                    <div class="apps-list">
+                        <div class="app-item" data-app="淘宝" data-category="ecommerce">
+                            <div class="app-icon">🛍️</div>
+                            <div class="app-info">
+                                <div class="app-name">淘宝</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="京东" data-category="ecommerce">
+                            <div class="app-icon">📦</div>
+                            <div class="app-info">
+                                <div class="app-name">京东</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="拼多多" data-category="ecommerce">
+                            <div class="app-icon">📱</div>
+                            <div class="app-info">
+                                <div class="app-name">拼多多</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="category-cloud" class="apps-section">
+                    <button class="test-all-btn" data-category="cloud">测试全部</button>
+                    <div class="apps-list">
+                        <div class="app-item" data-app="AWS" data-category="cloud">
+                            <div class="app-icon">☁️</div>
+                            <div class="app-info">
+                                <div class="app-name">AWS</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="阿里云" data-category="cloud">
+                            <div class="app-icon">🐱</div>
+                            <div class="app-info">
+                                <div class="app-name">阿里云</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-item" data-app="腾讯云" data-category="cloud">
+                            <div class="app-icon">🖥️</div>
+                            <div class="app-info">
+                                <div class="app-name">腾讯云</div>
+                                <div class="app-latency">
+                                    <span class="latency-value">--</span>
+                                    <span class="status-badge" style="background-color: #64748B">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-history" class="tab-content">
+                <div class="history-header">
+                    <h3>📜 历史记录</h3>
+                    <button id="clearHistory" class="btn-clear">清除</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <p class="empty-state">暂无历史记录</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mobile-footer">
+            <p>© 2024 Wi-Fi 测速 | 手机端版本</p>
+        </footer>
+    </div>
+
+    <!-- 通知弹窗 -->
+    <div id="notificationModal" class="notification-modal">
+        <div class="notification-content">
+            <h3>📢 项目说明</h3>
+            <p>本网站为开源项目，如有任何bug，请反馈给 <strong>akop2021@mcclaw.freeqiye.com</strong>。谢谢！</p>
+            <p style="margin-top: 10px; font-size: 14px; color: var(--text-secondary);">（由于本人建站不是很厉害可能会有数据不真实情况，请反馈给我们，这里向您致歉）</p>
+            <button id="closeNotification" class="btn-primary" style="margin-top: 20px;">知道了</button>
+        </div>
+    </div>
+
+    <style>
+        .notification-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .notification-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .notification-content {
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-radius: var(--radius-md);
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .notification-content h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-size: 20px;
+        }
+        .notification-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+    </style>
+
+    <script src="js/config.js"></script>
+    <script src="js/nodes.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/speedtest.js"></script>
+    <script src="js/latency.js"></script>
+    <script src="js/mobile.js"></script>
+    
+    <script>
+        // 页面加载时显示通知弹窗
+        window.addEventListener('load', function() {
+            const notificationModal = document.getElementById('notificationModal');
+            const closeNotification = document.getElementById('closeNotification');
+            
+            // 显示弹窗
+            notificationModal.classList.add('show');
+            
+            // 关闭弹窗
+            closeNotification.addEventListener('click', function() {
+                notificationModal.classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>

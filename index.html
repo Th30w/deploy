@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wi-Fi 测速 - 专业网络性能测试平台">
+    <title>Wi-Fi 测速 - 正在跳转...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #F8FAFC;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 600px;
+        }
+
+        .logo {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #94A3B8;
+            margin-bottom: 40px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 30px 0;
+        }
+
+        .loading span {
+            width: 12px;
+            height: 12px;
+            background: #3B82F6;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+        .loading span:nth-child(3) { animation-delay: 0; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .status {
+            font-size: 14px;
+            color: #64748B;
+            margin-top: 20px;
+        }
+
+        .manual-select {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid #334155;
+        }
+
+        .manual-select h3 {
+            font-size: 16px;
+            color: #94A3B8;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #F8FAFC;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-3px);
+        }
+
+        .detected {
+            background: #1E293B;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .detected-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .detected-text {
+            font-size: 14px;
+            color: #94A3B8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">�</div>
+        <h1>Wi-Fi 测速</h1>
+        <p class="subtitle">智能网络性能测试平台</p>
+
+        <div class="detected">
+            <div class="detected-icon" id="deviceIcon">🔍</div>
+            <div class="detected-text" id="deviceText">正在检测您的设备...</div>
+        </div>
+
+        <div class="loading">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="status" id="statusText">
+            正在跳转到最佳版本...
+        </div>
+
+        <div class="manual-select">
+            <h3>或者手动选择版本：</h3>
+            <div class="btn-group">
+                <a href="desktop.html" class="btn btn-primary">
+                    💻 电脑端
+                </a>
+                <a href="mobile.html" class="btn btn-secondary">
+                    📱 手机端
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const width = window.innerWidth;
+
+            let device = {
+                type: 'desktop',
+                icon: '💻',
+                mobileUrl: 'mobile.html',
+                desktopUrl: 'desktop.html'
+            };
+
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+            const isTablet = /ipad|tablet/i.test(userAgent) && width > 768;
+            const isSmallScreen = width < 768;
+
+            if (isMobile || isTablet || isSmallScreen) {
+                device.type = 'mobile';
+                device.icon = '📱';
+            }
+
+            return device;
+        }
+
+        function init() {
+            const device = detectDevice();
+
+            document.getElementById('deviceIcon').textContent = device.icon;
+            document.getElementById('deviceText').textContent = `检测到: ${device.type === 'mobile' ? '移动设备' : '桌面设备'}`;
+            document.getElementById('statusText').textContent = `将在 2 秒后跳转到${device.type === 'mobile' ? '手机版' : '电脑版'}...`;
+
+            setTimeout(() => {
+                const targetUrl = device.type === 'mobile' ? device.mobileUrl : device.desktopUrl;
+                window.location.href = targetUrl;
+            }, 2000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
